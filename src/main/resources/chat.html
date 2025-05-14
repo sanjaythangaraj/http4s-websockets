@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<body>
+<div>
+    <div id="output"
+         style="height: 500px;
+                    width: 500px;
+                    text-align: left;
+                    overflow-y: scroll;
+                    border-radius: 5px;
+                    padding: 3px;
+                    border: solid purple 2px;">
+    </div>
+    <br/>
+    <form id="chatform">
+        <input type="text" name="entry" id="entry"/>
+        <button type="submit">Send</button>
+    </form>
+</div>
+<script>
+    const output = document.getElementById("output");
+    const form = document.getElementById("chatform");
+
+    output.append("Send a message to get started! \n");
+    const socket = new WebSocket("ws://localhost:8080/ws");
+
+    socket.onmessage = function (event) {
+        output.append(event.data + "\n");
+    };
+
+    socket.onclose = function (event) {
+        output.append("[closed] server connection ended");
+    };
+
+    socket.onerror = function (error) {
+        output.append("[Error] An error occurred while processing data");
+        console.log("[error]" + error.data + "\n");
+    };
+
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const message = document.getElementById('entry').value;
+        socket.send(message);
+        document.getElementById('entry').value = '';
+
+    });
+
+</script>
+</body>
+</html>

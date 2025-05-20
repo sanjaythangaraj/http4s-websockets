@@ -17,3 +17,10 @@ libraryDependencies ++= Seq(
   "org.typelevel" %% "log4cats-slf4j" % "2.7.0",
   "ch.qos.logback" % "logback-classic" % "1.5.18"
 )
+
+assembly / assemblyMergeStrategy := {
+  case "module-info.class" => MergeStrategy.discard
+  case x                   => (assembly / assemblyMergeStrategy).value.apply(x)
+}
+assembly / mainClass             := Some("com.example.websockets.Program")
+assembly / assemblyJarName       := "wschat.jar"

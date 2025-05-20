@@ -28,7 +28,7 @@ object InputMessage {
 
     override def parse(userRef: Ref[F, Option[User]], text: String): F[List[OutputMessage]] = {
       text.trim match {
-        case ""  => List(DiscardMessage).pure[F]
+        case "" => List(DiscardMessage).pure[F]
         case txt =>
           userRef.get.flatMap { u =>
             u.fold {
@@ -38,7 +38,7 @@ object InputMessage {
                 case Invalid(e) =>
                   List(ParsingError(u, e)).pure[F]
               }
-            } { user => processText4Reg(user, txt, protocol)}
+            } { user => processText4Reg(user, txt, protocol) }
           }
       }
     }
@@ -48,9 +48,9 @@ object InputMessage {
 private def commandParser: Parser[TextCommand] = {
   val leftSide                          = (char('/').string ~ alpha.rep.string).string
   val rightSide: Parser[(Unit, String)] = sp ~ alpha.rep.string
-  ((leftSide ~ rightSide.?) <* wsp.rep.?).map { (left, right) =>
+  ((leftSide ~ rightSide.?) <* wsp.rep.?).map((left, right) =>
     TextCommand(left, right.map((_, s) => s))
-  }
+  )
 }
 
 private def parseToTextCommand(
@@ -61,10 +61,10 @@ private def parseToTextCommand(
 
 private def processText4UnReg[F[_]: Monad](
     text: String,
-    protocol:Protocol[F],
+    protocol: Protocol[F],
     userRef: Ref[F, Option[User]],
     room: Room
-                                          ): F[List[OutputMessage]] = {
+): F[List[OutputMessage]] = {
   if (text.charAt(0) == '/') {
     parseToTextCommand(text).fold(
       _ =>
@@ -80,7 +80,7 @@ private def processText4UnReg[F[_]: Monad](
                 protocol.register(n).flatMap {
                   case SuccessfulRegistration(u, _) =>
                     for {
-                      _ <- userRef.update(_ => Some(u))
+                      _  <- userRef.update(_ => Some(u))
                       om <- protocol.enterRoom(u, room)
                     } yield {
                       List(
@@ -97,7 +97,7 @@ private def processText4UnReg[F[_]: Monad](
               }
             }
 
-          case _ => List(UnsupportedCommand(None)).pure[F]
+          case _ => (List(UnsupportedCommand(None)) ++ List(Register(None))).pure[F]
         }
     )
   } else {
@@ -132,6 +132,7 @@ private def processText4Reg[F[_]: Applicative](
             protocol.listRooms(user)
           case TextCommand("/members", None) =>
             protocol.listMembers(user)
+          case _ => List(UnsupportedCommand(None)).pure[F]
         }
     )
   } else {

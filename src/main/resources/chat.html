@@ -21,20 +21,43 @@
     const output = document.getElementById("output");
     const form = document.getElementById("chatform");
 
-    output.append("Send a message to get started! \n");
+    function colorText(txt, color) {
+        let pre = document.createElement("pre");
+        pre.style.color = color
+        pre.textContent = txt
+        return pre
+    }
+
+    output.append(colorText("Send a message to get started!", "purple"));
     const socket = new WebSocket("ws://localhost:8080/ws");
 
     socket.onmessage = function (event) {
-        output.append(event.data + "\n");
+        let obj = JSON.parse(event.data);
+        if (obj.Register) {
+            output.append(colorText(obj.Register.msg, "green"))
+        } else if (obj.ParsingError) {
+            output.append(colorText("Registration failed: " + obj.ParsingError.msg, "red"))
+        } else if (obj.SuccessfulRegistration) {
+            output.append(colorText(obj.SuccessfulRegistration.msg, "purple"))
+        } else if (obj.UnsupportedCommand) {
+            output.append(colorText(obj.UnsupportedCommand.msg, "red"))
+        }if (obj.SendToUser) {
+            output.append(colorText(obj.SendToUser.msg, "green"))
+        } else if (obj.ChatMsg) {
+            output.append(colorText(obj.ChatMsg.from.name + " : " + obj.ChatMsg.msg, "purple"))
+        } else { }
+        output.scrollTop = output.scrollHeight;
     };
 
     socket.onclose = function (event) {
-        output.append("[closed] server connection ended");
+        output.append(colorText("[closed] server connection ended", "red"));
+        output.scrollTop = output.scrollHeight;
     };
 
     socket.onerror = function (error) {
-        output.append("[Error] An error occurred while processing data");
+        output.append(colorText("[Error] An error occurred while processing data", "red"));
         console.log("[error]" + error.data + "\n");
+        output.scrollTop = output.scrollHeight;
     };
 
     form.addEventListener('submit', (event) => {
